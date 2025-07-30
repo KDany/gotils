@@ -1,4 +1,4 @@
-package logger
+package log
 
 import (
 	"fmt"
@@ -15,14 +15,15 @@ type Config struct {
 	ExitOnError bool
 }
 
-type log struct{}
+type loggerImpl struct{}
 
-var Log = log{}
 var conf Config
 
-func SetConfig(c Config) {
+func (loggerImpl) SetConfig(c Config) {
 	conf = c
 }
+
+var Logger loggerImpl
 
 func logMessage(logType string, message ...any) {
 	if conf != (Config{}) {
@@ -51,15 +52,15 @@ func logMessage(logType string, message ...any) {
 	fmt.Println(message...)
 }
 
-func (l log) Info(message ...any) {
+func Info(message ...any) {
 	logMessage("info", message...)
 }
 
-func (l log) Warn(message ...any) {
+func Warn(message ...any) {
 	logMessage("warn", message...)
 }
 
-func (l log) Error(message ...any) {
+func Error(message ...any) {
 	logMessage("error", message...)
 	if conf.ExitOnError {
 		os.Exit(1)
