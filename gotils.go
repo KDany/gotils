@@ -1,7 +1,7 @@
 package gotils
 
 import (
-	"gotils/logger"
+	"github.com/KDany/gotils/logger"
 )
 
 const Test = "This is a test constant for gotils package"
