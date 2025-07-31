@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/KDany/gotils/log"
@@ -14,13 +15,13 @@ func Get() *pgx.Conn {
 	return db
 }
 
-func Connect(url string, retries int) error {
+func Connect(u string, retries int) error {
 	var err error
 
-	log.Info("/gotils/ - Connecting to database at ", url)
+	log.Info("/gotils/ - Connecting to database at ", maskDBUrl(u))
 
 	for ; retries > 0; retries-- {
-		db, err = pgx.Connect(context.Background(), url)
+		db, err = pgx.Connect(context.Background(), u)
 		if err == nil {
 			break
 		}
@@ -55,4 +56,15 @@ func IsConnected() bool {
 		return err == nil
 	}
 	return false
+}
+
+func maskDBUrl(rawurl string) string {
+	parsed, err := url.Parse(rawurl)
+	if err != nil {
+		return rawurl
+	}
+	if parsed.User != nil {
+		parsed.User = url.UserPassword("******", "******")
+	}
+	return parsed.String()
 }
