@@ -81,5 +81,6 @@ func maskDBUrl(rawurl string) string {
 		}
 		return masked
 	}
+
 	return parsed.String()
 }
