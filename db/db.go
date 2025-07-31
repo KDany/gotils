@@ -9,6 +9,39 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type Config struct {
+	StartConnect  string
+	RetryConnect  string
+	FailedConnect string
+	Connected     string
+	Disconnect    string
+}
+
+type loggerImpl struct{}
+
+var conf Config
+
+func (loggerImpl) SetConfig(c Config) {
+	conf = c
+}
+
+var Logger loggerImpl
+
+var baseConfig = Config{
+	StartConnect:  "/gotils/ - Connecting to database at ",
+	RetryConnect:  "/gotils/ - Failed to connect to database. Retrying in 5 seconds...",
+	FailedConnect: "/gotils/ - Failed to connect to database: ",
+	Connected:     "/gotils/ - Database connection established",
+	Disconnect:    "/gotils/ - Disconnecting from database",
+}
+
+func getConfig() Config {
+	if conf == (Config{}) {
+		return baseConfig
+	}
+	return conf
+}
+
 var db *pgx.Conn
 
 func Get() *pgx.Conn {
@@ -17,27 +50,30 @@ func Get() *pgx.Conn {
 
 func Connect(u string, retries int) error {
 	var err error
+	var logConfig = getConfig()
 
-	log.Info("/gotils/ - Connecting to database at ", maskDBUrl(u))
+	log.Info(logConfig.StartConnect, maskDBUrl(u))
 
 	for ; retries > 0; retries-- {
 		db, err = pgx.Connect(context.Background(), u)
 		if err == nil {
 			break
 		}
-		log.Warn("/gotils/ - Failed to connect to database. Retrying in 5 seconds...")
+		log.Warn(logConfig.RetryConnect)
 		time.Sleep(5 * time.Second)
 	}
 	if err != nil {
-		log.Error("/gotils/ - Failed to connect to database: ", err)
+		log.Error(logConfig.FailedConnect, err)
 		return err
 	}
+	log.Info(logConfig.Connected)
 	return nil
 }
 
 func Disconnect() error {
 	if db != nil {
-		log.Info("/gotils/ - Disconnecting from database")
+		var logConfig = getConfig()
+		log.Info(logConfig.Disconnect)
 		return db.Close(context.Background())
 	}
 	return nil
@@ -81,6 +117,5 @@ func maskDBUrl(rawurl string) string {
 		}
 		return masked
 	}
-
 	return parsed.String()
 }
