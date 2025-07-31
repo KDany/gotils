@@ -65,6 +65,21 @@ func maskDBUrl(rawurl string) string {
 	}
 	if parsed.User != nil {
 		parsed.User = url.UserPassword("******", "******")
+		masked := parsed.Scheme + "://"
+		masked += "******:******@"
+		if parsed.Host != "" {
+			masked += parsed.Host
+		}
+		if parsed.Path != "" {
+			masked += parsed.Path
+		}
+		if parsed.RawQuery != "" {
+			masked += "?" + parsed.RawQuery
+		}
+		if parsed.Fragment != "" {
+			masked += "#" + parsed.Fragment
+		}
+		return masked
 	}
 	return parsed.String()
 }
